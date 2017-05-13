@@ -36,12 +36,18 @@ def waitpls():
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-resource_add_path('C:/Users/aseryz/Desktop/Nastya/AGH/OOPL/Memory game/Source/Classic/')
+# resource_add_path('C:/Users/aseryz/Desktop/Nastya/AGH/OOPL/Memory game/Source/Classic/')
+resource_add_path(dir_path)
 
-Config.set('graphics', 'resizable', True)  # don't make the app re-sizeable
+Config.set('graphics', 'resizable', 0)  # don't make the app re-sizeable
 Window.clearcolor = (1, 1, 1, 1)
-Window.size = (1000, 800)
 
+# Window.size = (1000, 800)
+# Window.size = (1000, 800)
+Window.resizable=(0)
+# Window.borderless=(1)
+
+button_color=[2.1, 0.11, 0.11, 1]
 
 class Menu(Widget):
     buttonList = []
@@ -59,6 +65,12 @@ class Menu(Widget):
         self.layout.y = Window.height / 2 - self.layout.height / 2
         self.add_widget(self.layout)
 
+        self.msg = Label(text='Memory game')
+        self.msg.color = (0, 0, 0, 1)
+        self.msg.font_size = Window.width * 0.07
+        self.msg.pos = (Window.width * 0.45, Window.height * 0.75)
+        self.add_widget(self.msg)
+
     def on_button_release(self, *args):
         print 'The on_button_release event was just dispatched', args
         # don't need to do anything here. needed for dispatch
@@ -72,7 +84,8 @@ class Menu(Widget):
     def addButtons(self):
         for k in self.buttonList:
             tmpBtn = Button(text=k)
-            tmpBtn.background_color = [.4, .4, .4, .4]
+            # tmpBtn.background_color = [.4, .4, .4, .4]
+            tmpBtn.background_color = button_color
             tmpBtn.bind(on_release=self.callback)  # when the button is released the callback function is called
             self.layout.add_widget(tmpBtn)
 
@@ -81,25 +94,14 @@ class Menu(Widget):
             self.addButtons()
             self.done = True
 
+
 class StartMenu(Menu):
     # setup the menu button names
-    buttonList = ['Start', 'Settings', 'Exit']
+    buttonList = ['Start', 'Exit']
 
     def __init__(self, **kwargs):
         super(StartMenu, self).__init__(**kwargs)
 
-        self.layout = BoxLayout(orientation='vertical')
-        self.layout.width = Window.width / 2
-        self.layout.height = Window.height / 2
-        self.layout.x = Window.width / 2 - self.layout.width / 2
-        self.layout.y = Window.height / 2 - self.layout.height / 2
-        self.add_widget(self.layout)
-
-        self.msg = Label(text='Memory game')
-        self.msg.color = (0, 0, 0, 1)
-        self.msg.font_size = Window.width * 0.07
-        self.msg.pos = (Window.width * 0.45, Window.height * 0.75)
-        self.add_widget(self.msg)
 
 class LevelMenu(Menu):
     # setup the menu button names
@@ -108,18 +110,6 @@ class LevelMenu(Menu):
     def __init__(self, **kwargs):
         super(LevelMenu, self).__init__(**kwargs)
 
-        self.layout = BoxLayout(orientation='vertical')
-        self.layout.width = Window.width / 2
-        self.layout.height = Window.height / 2
-        self.layout.x = Window.width / 2 - self.layout.width / 2
-        self.layout.y = Window.height / 2 - self.layout.height / 2
-        self.add_widget(self.layout)
-
-        self.msg = Label(text='Memory game')
-        self.msg.color = (0, 0, 0, 1)
-        self.msg.font_size = Window.width * 0.07
-        self.msg.pos = (Window.width * 0.45, Window.height * 0.75)
-        self.add_widget(self.msg)
 
 
 class CustomLevel(Menu):
@@ -127,15 +117,6 @@ class CustomLevel(Menu):
 
     def __init__(self, **kwargs):
         super(CustomLevel, self).__init__(**kwargs)
-
-        self.layout = BoxLayout(orientation='vertical')
-        self.layout.width = Window.width / 2
-        self.layout.height = Window.height / 2
-        self.layout.x = Window.width / 2 - self.layout.width / 2
-        self.layout.y = Window.height / 2 - self.layout.height / 2
-        self.add_widget(self.layout)
-        self.custom_row=None
-        self.custom_column=None
 
         def selected_value_r(spinner_row, text):
             print 'Cust Value:%s' % text
@@ -159,12 +140,45 @@ class CustomLevel(Menu):
         # self.custom_column = self.spinner_column.selected_value
         self.layout.add_widget(self.spinner_column)
 
-        self.msg = Label(text='Memory game')
-        self.msg.color = (0, 0, 0, 1)
-        self.msg.font_size = Window.width * 0.07
-        self.msg.pos = (Window.width * 0.45, Window.height * 0.75)
-        self.add_widget(self.msg)
+class BoardMenu(Widget):
+    # buttonList = ['Time','Score','Exit']
+    buttonList = ['Exit']
+    done = False
+    def __init__(self, **kwargs):
+        # create custom events first
+        self.register_event_type('on_button_release')
 
+        super(BoardMenu, self).__init__(**kwargs)
+
+        self.layout=BoxLayout(orientation='horizontal')
+        self.layout.width = Window.width
+        self.layout.height = Window.height*1/10
+        self.layout.x = Window.width-self.layout.width
+        self.layout.y = Window.height-self.layout.height
+        self.add_widget(self.layout)
+
+    def on_button_release(self, *args):
+        print 'The on_button_release event was just dispatched', args
+        # don't need to do anything here. needed for dispatch
+        pass
+
+    def callback(self, instance):
+        print('The button %s is being pressed' % instance.text)
+        self.buttonText = instance.text
+        self.dispatch('on_button_release')
+
+    def addButtons(self):
+        for k in self.buttonList:
+            tmpBtn = Button(text=k)
+            # tmpBtn.background_color = [.4, .4, .4, .4]
+            tmpBtn.background_color = button_color
+            tmpBtn.bind(on_release=self.callback)  # when the button is released the callback function is called
+            self.layout.add_widget(tmpBtn)
+
+    def buildUp(self):
+        if not self.done:
+            self.addButtons()
+            self.done = True
 
 class Card(ButtonBehavior, Image):
 
@@ -176,7 +190,9 @@ class Card(ButtonBehavior, Image):
         super(Card, self).__init__(**kwargs)
         # self.background_color=(255,255,255)
         # os.path.join(dir_path, 'Car')
-        self.source = 'C:/Users/aseryz/Desktop/Nastya/AGH/OOPL/Memory game/Source/Card-Back-01.png'
+        # self.source = 'C:/Users/aseryz/Desktop/Nastya/AGH/OOPL/Memory game/Source/Card-Back-01.png'
+        self.source = os.path.join(dir_path,'Source', 'Card-Back-01.png')
+
         self.allow_stretch = True
         self.keep_ratio = True
         self.flipped = False
@@ -194,13 +210,13 @@ class Card(ButtonBehavior, Image):
         return self.card_rank
 
     def set_source_face(self,face):
-        self.face=resource_find(face)
-        # self.face=resource_find('Classic/c01.png')
+        self.face=resource_find(os.path.join(dir_path,'Source','Classic', face))
         print self.face
         return self.face
 
     def set_source_back(self):
-        self.back = 'C:/Users/aseryz/Desktop/Nastya/AGH/OOPL/Memory game/Source/Card-Back-01.png'
+        # self.back = 'C:/Users/aseryz/Desktop/Nastya/AGH/OOPL/Memory game/Source/Card-Back-01.png'
+        self.back=os.path.join(dir_path, 'Source', 'Card-Back-01.png')
         return self.back
 
     def flip(self):
@@ -236,9 +252,9 @@ class CardDesk(GridLayout):
         self.register_event_type('on_card_release')
 
         self.width = Window.width
-        self.height = Window.height
+        self.height = Window.height*9/10
         self.x = Window.width - self.width
-        self.y = Window.height - self.height
+        self.y = Window.height*9/10 - self.height
         self.cardList = None
         self.spacing = [50, 20]
 
@@ -368,8 +384,10 @@ class CardDesk(GridLayout):
         self.randomize_cards()
         for row in range(self.rows):
             for column in range(self.cols):
-                source=str(self.card_stack[row *self.cols+column].get_card_suit())+\
-                       str((self.card_stack[row *self.cols+column].get_card_rank()))+'.png'
+                # source=str(self.card_stack[row *self.cols+column].get_card_suit())+\
+                #        str((self.card_stack[row *self.cols+column].get_card_rank()))+'.png'
+                source = str(self.card_stack[row * self.cols + column].get_card_suit()) + \
+                         str((self.card_stack[row * self.cols + column].get_card_rank())) + '.png'
                 print 'Card suit:%s rank:%s' % (
                 self.card_stack[row *self.cols+column].get_card_suit(), self.card_stack[row *self.cols+column].get_card_rank())
                 print 'Source: %s' % source
@@ -403,6 +421,8 @@ class ClientApp(App):
         self.sm = StartMenu()
         self.sm.buildUp()
 
+        self.bm=BoardMenu()
+
         self.lm = LevelMenu()
         self.cl=CustomLevel()
 
@@ -411,10 +431,13 @@ class ClientApp(App):
             if self.cl.buttonText == 'Ok':
 
                 self.de = CardDesk()
-
                 self.de.set_bounds(self.cl.custom_row,self.cl.custom_column)
                 self.de.buildUp()
                 self.parent.remove_widget(self.cl)
+
+                self.bm.buildUp()
+                self.parent.add_widget(self.bm)
+
                 self.parent.add_widget(self.de)
                 print ' we should start the game now custom'
 
@@ -429,6 +452,10 @@ class ClientApp(App):
                 self.parent.remove_widget(self.lm)
                 self.de = CardDesk()
                 self.de.set_bounds(3, 4)
+
+                self.bm.buildUp()
+                self.parent.add_widget(self.bm)
+
                 self.de.buildUp()
                 self.parent.add_widget(self.de)
                 print ' we should start the game now easy'
@@ -437,6 +464,10 @@ class ClientApp(App):
                 self.parent.remove_widget(self.lm)
                 self.de = CardDesk()
                 self.de.set_bounds(4, 5)
+
+                self.bm.buildUp()
+                self.parent.add_widget(self.bm)
+
                 self.de.buildUp()
                 self.parent.add_widget(self.de)
                 print ' we should start the game now medium'
@@ -445,6 +476,10 @@ class ClientApp(App):
                 self.parent.remove_widget(self.lm)
                 self.de = CardDesk()
                 self.de.set_bounds(5, 6)
+
+                self.bm.buildUp()
+                self.parent.add_widget(self.bm)
+
                 self.de.buildUp()
                 self.parent.add_widget(self.de)
                 print ' we should start the game now hard'
@@ -460,14 +495,21 @@ class ClientApp(App):
                 self.parent.add_widget(self.sm)
                 print 'Cancel'
 
+        def check_board_button(obj):
+            # check to see which button was pressed
+
+            if self.bm.buttonText == 'Exit':
+                self.parent.remove_widget(self.bm)
+                self.parent.remove_widget(self.de)
+                self.parent.add_widget(self.sm)
+                print ' Exit'
+
         def check_start_button(obj):
             # check to see which button was pressed
             if self.sm.buttonText == 'Start':
                 self.parent.remove_widget(self.sm)
                 self.parent.add_widget(self.lm)
-                #if not self.lm.done:
                 self.lm.buildUp()
-                #self.lm.done = True
 
             if self.sm.buttonText == 'Settings':
                 self.parent.remove_widget(self.sm)
@@ -481,6 +523,7 @@ class ClientApp(App):
         self.sm.bind(on_button_release=check_start_button)
         self.lm.bind(on_button_release=check_level_button)
         self.cl.bind(on_button_release=check_custlevel_button)
+        self.bm.bind(on_button_release=check_board_button)
 
         self.parent.add_widget(self.sm)
 
