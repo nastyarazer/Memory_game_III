@@ -6,19 +6,13 @@ from kivy.uix.widget import Widget
 from kivy.uix.label import Label
 from kivy.uix.button import Button
 from kivy.uix.behaviors import ButtonBehavior
-from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.image import Image
 from kivy.core.window import Window
-from kivy.properties import NumericProperty
-from kivy.properties import ObjectProperty
 from kivy.clock import Clock
 from kivy.uix.gridlayout import GridLayout
 from kivy.properties import ListProperty
 from kivy.uix.spinner import Spinner
-
-from kivy.graphics import Rectangle, Color, Canvas
-from functools import partial
 from random import randint
 from kivy.resources import resource_add_path
 from kivy.resources import resource_find
@@ -27,6 +21,10 @@ import os
 import thread
 from kivy.config import Config
 
+#Below global variable and function made for holding
+#procces of the game for a while.
+#Used for wating between turning not mached cards
+#and new press from user.
 pls_wait_for_real = False
 
 def waitpls():
@@ -34,21 +32,25 @@ def waitpls():
     time.sleep(0.6)
     pls_wait_for_real = False
 
+#Defining directory path to the main file.
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
-# resource_add_path('C:/Users/aseryz/Desktop/Nastya/AGH/OOPL/Memory game/Source/Classic/')
+#Adding path for application. Used for loading images
+#for cards by particular path.
 resource_add_path(dir_path)
 
-Config.set('graphics', 'resizable', 0)  # don't make the app re-sizeable
+#Setting configuration for application.
+Config.set('graphics', 'resizable', 0)
 Window.clearcolor = (1, 1, 1, 1)
-
-# Window.size = (1000, 800)
-# Window.size = (1000, 800)
 Window.resizable=(0)
-# Window.borderless=(1)
 
+#Color for all buttons in application.
 button_color=[2.1, 0.11, 0.11, 1]
 
+#Menu class inherits class Widget
+#Creates an Box with Buttons in the centre of the window.
+#Reads events from pressed button.
+#Used for creation of all menus in application.
 class Menu(Widget):
     buttonList = []
     done = False
@@ -80,29 +82,27 @@ class Menu(Widget):
         print('The button %s is being pressed' % instance.text)
         self.buttonText = instance.text
         self.dispatch('on_button_release')
-
+#Adding buttons according to the buttonList.
     def addButtons(self):
         for k in self.buttonList:
             tmpBtn = Button(text=k)
-            # tmpBtn.background_color = [.4, .4, .4, .4]
             tmpBtn.background_color = button_color
             tmpBtn.bind(on_release=self.callback)  # when the button is released the callback function is called
             self.layout.add_widget(tmpBtn)
-
+#Building all menu widget.
     def buildUp(self):
         if not self.done:
             self.addButtons()
             self.done = True
 
-
+#Stert menu
 class StartMenu(Menu):
     # setup the menu button names
     buttonList = ['Start', 'Exit']
-
     def __init__(self, **kwargs):
         super(StartMenu, self).__init__(**kwargs)
 
-
+#Level Menu
 class LevelMenu(Menu):
     # setup the menu button names
     buttonList = ['Easy', 'Medium', 'Hard', 'Custom', 'Cancel']
@@ -110,8 +110,9 @@ class LevelMenu(Menu):
     def __init__(self, **kwargs):
         super(LevelMenu, self).__init__(**kwargs)
 
-
-
+#Custom level menu, has the same properties as all menus,
+#but has two additional widgets -spiners, for giving
+#user a choise which number of rows/columns he wants.
 class CustomLevel(Menu):
     buttonList = ['Ok','Cancel']
 
@@ -136,10 +137,10 @@ class CustomLevel(Menu):
 
         self.spinner_column = Spinner(text='Number of Columns',values=('1','3','5'))
         self.spinner_column.bind(text=selected_value_c)
-        # self.spinner_column.bind(text=self.spinner_column.selected_value)
-        # self.custom_column = self.spinner_column.selected_value
         self.layout.add_widget(self.spinner_column)
 
+#Boadr menu has different configuration and placement.
+#Placed on the top of the play field with cards.
 class BoardMenu(Widget):
     # buttonList = ['Time','Score','Exit']
     buttonList = ['Exit']
@@ -170,7 +171,6 @@ class BoardMenu(Widget):
     def addButtons(self):
         for k in self.buttonList:
             tmpBtn = Button(text=k)
-            # tmpBtn.background_color = [.4, .4, .4, .4]
             tmpBtn.background_color = button_color
             tmpBtn.bind(on_release=self.callback)  # when the button is released the callback function is called
             self.layout.add_widget(tmpBtn)
@@ -180,6 +180,10 @@ class BoardMenu(Widget):
             self.addButtons()
             self.done = True
 
+#Card class inherits Image for showing back and face of the card
+#and ButtonBehavior for acting like a button and being presed.
+#Card has its own position on a play feild, so that application
+#knows which card was presed.
 class Card(ButtonBehavior, Image):
 
     coords = ListProperty([0, 0])
@@ -188,9 +192,7 @@ class Card(ButtonBehavior, Image):
 
     def __init__(self, **kwargs):
         super(Card, self).__init__(**kwargs)
-        # self.background_color=(255,255,255)
-        # os.path.join(dir_path, 'Car')
-        # self.source = 'C:/Users/aseryz/Desktop/Nastya/AGH/OOPL/Memory game/Source/Card-Back-01.png'
+
         self.source = os.path.join(dir_path,'Source', 'Card-Back-01.png')
 
         self.allow_stretch = True
@@ -199,6 +201,7 @@ class Card(ButtonBehavior, Image):
         self.card_rank=None
         self.card_suit=None
 
+#Setting card suit and rank.
     def set_card_rand(self, card_rank,card_suit):
         self.card_rank = card_rank
         self.card_suit = card_suit
@@ -209,16 +212,17 @@ class Card(ButtonBehavior, Image):
     def get_card_rank(self):
         return self.card_rank
 
+#Setting image for the face of the card according to its rank and suit
     def set_source_face(self,face):
         self.face=resource_find(os.path.join(dir_path,'Source','Classic', face))
         print self.face
         return self.face
 
     def set_source_back(self):
-        # self.back = 'C:/Users/aseryz/Desktop/Nastya/AGH/OOPL/Memory game/Source/Card-Back-01.png'
         self.back=os.path.join(dir_path, 'Source', 'Card-Back-01.png')
         return self.back
 
+#Flipping the card- changing its back with face and reverse.
     def flip(self):
         if not self.flipped:
             self.source=self.set_source_face(self.face)
@@ -234,11 +238,12 @@ class Card(ButtonBehavior, Image):
         print self.flipped
         self.reload()
 
+#Check if card flipped or not.
     def get_flipped_state(self):
-
         return self.flipped
 
-
+#CardDesk class inherits GridLayout for better and controled
+#plecament of objects on the play feild.
 class CardDesk(GridLayout):
     def __init__(self, **kwargs):
         super(CardDesk, self).__init__(**kwargs)
@@ -258,6 +263,7 @@ class CardDesk(GridLayout):
         self.cardList = None
         self.spacing = [50, 20]
 
+#Setting sizes of the feild in rows and columns.
     def set_bounds(self, ip_rows, ip_cols):
         self.rows = ip_rows
         self.cols = ip_cols
@@ -265,6 +271,7 @@ class CardDesk(GridLayout):
         self.cardList = range(ip_rows * ip_cols)
         print 'Card list:%s' % self.cardList
 
+#Randomizing card's rank and suit.
     def randomize_cards(self):
 
         self.rand_r=None
@@ -317,7 +324,7 @@ class CardDesk(GridLayout):
         print 'The on_card_release event was just dispatched', args
         # don't need to do anything here. needed for dispatch
 
-
+#Main game process with compearing of pressed pair of cards.
     def callback(self, instance ):
 
         global pls_wait_for_real
@@ -374,6 +381,7 @@ class CardDesk(GridLayout):
             self.flipping=False
         self.dispatch('on_card_release')
 
+#Adding cards on the feild.
     def addCards(self):
         for row in range(self.rows):
             for column in range(self.cols):
@@ -396,15 +404,18 @@ class CardDesk(GridLayout):
     def buildUp(self):
         self.addCards()
 
+#Remowing cards for the field.
     def remove(self):
         for row in range(self.rows):
             for column in range(self.cols):
                     self.remove_widget(self.card_stack[row *self.cols+column])
 
+#Flipping chosen card.
     def flip_card(self,fl_row,fl_col):
         self.card_stack[fl_row*self.cols+fl_col].flip()
         print 'I flipped!! r:%s c:%s' %(fl_row,fl_col)
 
+#Checking if game over or not.
     def check_flipped_cards(self):
         for row in range(self.rows):
             for column in range(self.cols):
@@ -412,7 +423,7 @@ class CardDesk(GridLayout):
                     return 0
         return 1
 
-
+#ClientApp is main application part it is app itself.
 class ClientApp(App):
     def build(self):
 
@@ -425,6 +436,8 @@ class ClientApp(App):
 
         self.lm = LevelMenu()
         self.cl=CustomLevel()
+
+#Checking which button was pressed and acting accordinly on customlevel menu.
 
         def check_custlevel_button(obj):
 
@@ -446,6 +459,7 @@ class ClientApp(App):
                 self.parent.add_widget(self.sm)
                 print 'Cancel'
 
+# Checking which button was pressed and acting accordinly on level menu.
         def check_level_button(obj):
 
             if self.lm.buttonText == 'Easy':
@@ -495,6 +509,7 @@ class ClientApp(App):
                 self.parent.add_widget(self.sm)
                 print 'Cancel'
 
+# Checking which button was pressed and acting accordinly on board menu.
         def check_board_button(obj):
             # check to see which button was pressed
 
@@ -504,6 +519,7 @@ class ClientApp(App):
                 self.parent.add_widget(self.sm)
                 print ' Exit'
 
+# Checking which button was pressed and acting accordinly on start menu.
         def check_start_button(obj):
             # check to see which button was pressed
             if self.sm.buttonText == 'Start':
@@ -520,6 +536,7 @@ class ClientApp(App):
                 App.get_running_app().stop()
                 print ' Exit'
 
+#Event sending:
         self.sm.bind(on_button_release=check_start_button)
         self.lm.bind(on_button_release=check_level_button)
         self.cl.bind(on_button_release=check_custlevel_button)
